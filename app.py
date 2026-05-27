@@ -55,13 +55,13 @@ if uploaded_file is not None:
         else:
             df_user = pd.read_excel(uploaded_file)
             
-        # コード列の型を文字列のゼロ埋め4桁にそろえる処理
-        if '二次医療圏コード' in df_user.columns:
-            code_col = '二次医療圏コード'
-        elif '二次医療圏' in df_user.columns:
-            code_col = '二次医療圏'
-        else:
-            code_col = st.sidebar.selectbox("二次医療圏コード（4桁）が入っている列を選択", df_user.columns)
+        # コード列の自動選択（デフォルト値を設定しつつ、ユーザーが手動で選べるようにする）
+        candidate_cols = [c for c in df_user.columns if 'コード' in c or 'code' in c.lower()]
+        default_index = 0
+        if len(candidate_cols) > 0:
+            default_index = list(df_user.columns).index(candidate_cols[0])
+            
+        code_col = st.sidebar.selectbox("二次医療圏コード（4桁）が入っている列を選択", df_user.columns, index=default_index)
             
         df_user[code_col] = df_user[code_col].astype(str).str.zfill(4)
         
@@ -131,6 +131,10 @@ if uploaded_file is not None:
                         legend=True,
                         missing_kwds={'color': 'lightgrey', 'label': 'データなし'}
                     )
+                
+                # 都道府県境界を太く描画する（都道府県単位で結合）
+                gdf_pref_bound = gdf_plot.dissolve(by='都道府県')
+                gdf_pref_bound.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5)
                 
                 # 表示範囲の限定と枠線
                 ax.set_xlim([128.3, 148.9])
