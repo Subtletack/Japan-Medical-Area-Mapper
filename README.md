@@ -40,23 +40,11 @@ streamlit run app.py
 ```
 起動すると、ブラウザが自動的に立ち上がり `http://localhost:8501` でアプリが利用可能になります。
 
----
+## 🌐 デモ（Web版）
 
-## ☁️ Webへの無料一般公開手順（Streamlit Community Cloud）
+本アプリケーションは、以下のURLからブラウザ上で直接インストール不要でご利用いただけます。
 
-GitHub経由でこのアプリを無料公開し、誰でもブラウザから使えるURLを発行する手順です。
-
-1. **GitHubへアップロード**:
-   本リポジトリをあなたのGitHubアカウントにアップロード（Push）します。
-2. **Streamlit Cloudへサインイン**:
-   [Streamlit Community Cloud](https://share.streamlit.io/) にアクセスし、GitHubアカウントでログインします。
-3. **デプロイ（公開）設定**:
-   「New app」ボタンを押し、以下の通り指定します。
-   * **Repository**: あなたのGitHubリポジトリ名（例：`username/japan-medical-mapper`）
-   * **Branch**: `main`
-   * **Main file path**: `app.py`
-4. **公開完了**:
-   「Deploy!」ボタンを押すと、数分で自動構築され世界中に一般公開されます！
+👉 **[Japan Medical Area Mapper - Web App](https://japan-medical-area-mapper-wd5acgvfya4vr7kcscpjub.streamlit.app/)**
 
 ---
 
