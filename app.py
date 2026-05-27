@@ -133,7 +133,7 @@ if uploaded_file is not None:
                     )
                 
                 # 都道府県境界を太く描画する（都道府県単位で結合）
-                gdf_pref_bound = gdf_plot.dissolve(by='都道府県')
+                gdf_pref_bound = gdf_plot.dissolve(by='prefecture')
                 gdf_pref_bound.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5)
                 
                 # 表示範囲の限定と枠線
