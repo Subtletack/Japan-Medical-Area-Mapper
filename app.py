@@ -83,8 +83,9 @@ if uploaded_file is not None:
         st.sidebar.header("2. 描画オプション")
         plot_type = st.sidebar.radio("変数の種類", ["連続変数 (グラデーション)", "カテゴリカル変数 (離散色)"])
         
-        # 描画対象エリアの選択
-        pref_list = ["全国"] + sorted(list(gdf_map['都道府県'].dropna().unique()))
+        # 描画対象エリアの選択（全国地方公共団体コードの順：北海道から沖縄の順にソート）
+        pref_df = gdf_map[['prefecture', '都道府県']].drop_duplicates().sort_values('prefecture')
+        pref_list = ["全国"] + list(pref_df['都道府県'])
         selected_pref = st.sidebar.selectbox("表示エリア", pref_list)
         
         # カラーマップ選択
@@ -148,17 +149,19 @@ if uploaded_file is not None:
                         missing_kwds={'color': 'lightgrey', 'label': 'データなし'}
                     )
                 
-                # 都道府県境界を太く描画する（事前保存された0.3MBの超軽量・高精度な都道府県境界データを使用）
-                if gdf_pref is not None:
-                    gdf_pref_plot = gdf_pref.copy()
-                    if selected_pref != "全国":
-                        gdf_pref_plot = gdf_pref_plot[gdf_pref_plot['N03_001'] == selected_pref]
-                    
-                    if selected_pref == "全国":
+                # 都道府県境界を太く描画する
+                if selected_pref == "全国":
+                    # 全国表示の場合は、事前保存された0.3MBの超軽量・高精度データを使用（高速化のため）
+                    if gdf_pref is not None:
+                        gdf_pref_plot = gdf_pref.copy()
                         is_okinawa_pref = gdf_pref_plot['prefcode'] == '47'
                         gdf_pref_plot.loc[is_okinawa_pref, 'geometry'] = gdf_pref_plot[is_okinawa_pref].geometry.translate(xoff=x_offset, yoff=y_offset)
-                    
-                    gdf_pref_plot.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5 if selected_pref == "全国" else 0.8)
+                        gdf_pref_plot.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5)
+                else:
+                    # 個別都道府県表示の場合は、描画対象の二次医療圏（数個）をその場で即座に結合
+                    # これにより、ズームアップしても100%完全に一致する美しい境界線が描画されます（処理時間も数ミリ秒です）
+                    gdf_pref_bound = gdf_plot.dissolve()
+                    gdf_pref_bound.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.8)
                 
                 # 表示範囲の限定と自動ズーム
                 if selected_pref == "全国":
