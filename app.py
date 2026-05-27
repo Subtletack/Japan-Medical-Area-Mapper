@@ -133,10 +133,12 @@ if uploaded_file is not None:
                     )
                 
                 # 都道府県境界を太く描画する（都道府県単位で結合）
-                # 図形の簡略化による不要な交差（TopologyException）を防ぐため buffer(0) で修復
-                gdf_plot['geometry'] = gdf_plot.geometry.buffer(0)
-                gdf_pref_bound = gdf_plot.dissolve(by='prefecture')
-                gdf_pref_bound.boundary.plot(ax=ax, edgecolor='black', linewidth=0.5)
+                # 簡略化によって生じた微小な隙間（cleft/gap）を埋めるため、バッファを広げて結合した後に縮める Closing 処理を行います
+                gdf_temp = gdf_plot.copy()
+                gdf_temp['geometry'] = gdf_temp.geometry.buffer(0.005)
+                gdf_pref_bound = gdf_temp.dissolve(by='prefecture')
+                gdf_pref_bound['geometry'] = gdf_pref_bound.geometry.buffer(-0.005)
+                gdf_pref_bound.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5)
                 
                 # 表示範囲の限定と枠線
                 ax.set_xlim([128.3, 148.9])
