@@ -83,6 +83,10 @@ if uploaded_file is not None:
         st.sidebar.header("2. 描画オプション")
         plot_type = st.sidebar.radio("変数の種類", ["連続変数 (グラデーション)", "カテゴリカル変数 (離散色)"])
         
+        # 描画対象エリアの選択
+        pref_list = ["全国"] + sorted(list(gdf_map['都道府県'].dropna().unique()))
+        selected_pref = st.sidebar.selectbox("表示エリア", pref_list)
+        
         # カラーマップ選択
         if "連続変数" in plot_type:
             cmap = st.sidebar.selectbox("カラーマップ", ["OrRd", "Blues", "Greens", "viridis", "coolwarm", "YlOrRd"])
@@ -107,14 +111,17 @@ if uploaded_file is not None:
             with st.spinner('地図を描画しています...'):
                 fig, ax = plt.subplots(1, 1, figsize=(14, 16), dpi=150)
                 
-                # 沖縄県の移動処理（描画用コピー）
+                # 描画対象のフィルタリング
                 gdf_plot = gdf_merged.copy()
-                is_okinawa = gdf_plot['prefecture'] == '47'
+                if selected_pref != "全国":
+                    gdf_plot = gdf_plot[gdf_plot['都道府県'] == selected_pref]
                 
-                # 移動距離設定
+                # 移動距離設定（全国表示のみ沖縄を移動）
                 x_offset = 6.0
                 y_offset = 15.0
-                gdf_plot.loc[is_okinawa, 'geometry'] = gdf_plot[is_okinawa].geometry.translate(xoff=x_offset, yoff=y_offset)
+                if selected_pref == "全国":
+                    is_okinawa = gdf_plot['prefecture'] == '47'
+                    gdf_plot.loc[is_okinawa, 'geometry'] = gdf_plot[is_okinawa].geometry.translate(xoff=x_offset, yoff=y_offset)
                 
                 # プロット
                 if "連続変数" in plot_type:
@@ -144,14 +151,29 @@ if uploaded_file is not None:
                 # 都道府県境界を太く描画する（事前保存された0.3MBの超軽量・高精度な都道府県境界データを使用）
                 if gdf_pref is not None:
                     gdf_pref_plot = gdf_pref.copy()
-                    is_okinawa_pref = gdf_pref_plot['prefcode'] == '47'
-                    gdf_pref_plot.loc[is_okinawa_pref, 'geometry'] = gdf_pref_plot[is_okinawa_pref].geometry.translate(xoff=x_offset, yoff=y_offset)
-                    gdf_pref_plot.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5)
+                    if selected_pref != "全国":
+                        gdf_pref_plot = gdf_pref_plot[gdf_pref_plot['N03_001'] == selected_pref]
+                    
+                    if selected_pref == "全国":
+                        is_okinawa_pref = gdf_pref_plot['prefcode'] == '47'
+                        gdf_pref_plot.loc[is_okinawa_pref, 'geometry'] = gdf_pref_plot[is_okinawa_pref].geometry.translate(xoff=x_offset, yoff=y_offset)
+                    
+                    gdf_pref_plot.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5 if selected_pref == "全国" else 0.8)
                 
-                # 表示範囲の限定と枠線
-                ax.set_xlim([128.3, 148.9])
-                ax.set_ylim([27.0, 45.7])
-                ax.plot([128.3, 134.5, 134.5], [38.5, 38.5, 45.7], color='gray', linestyle='--', linewidth=1.0)
+                # 表示範囲の限定と自動ズーム
+                if selected_pref == "全国":
+                    ax.set_xlim([128.3, 148.9])
+                    ax.set_ylim([27.0, 45.7])
+                    ax.plot([128.3, 134.5, 134.5], [38.5, 38.5, 45.7], color='gray', linestyle='--', linewidth=1.0)
+                else:
+                    # 対象都道府県のバウンディングボックスを取得してズーム
+                    bounds = gdf_plot.total_bounds  # [minx, miny, maxx, maxy]
+                    x_min, y_min, x_max, y_max = bounds
+                    x_pad = (x_max - x_min) * 0.08 if (x_max - x_min) > 0 else 0.1
+                    y_pad = (y_max - y_min) * 0.08 if (y_max - y_min) > 0 else 0.1
+                    ax.set_xlim([x_min - x_pad, x_max + x_pad])
+                    ax.set_ylim([y_min - y_pad, y_max + y_pad])
+                
                 ax.set_axis_off()
                 
                 st.pyplot(fig, dpi=300, use_container_width=True)
