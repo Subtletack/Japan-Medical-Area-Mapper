@@ -37,7 +37,16 @@ def load_map_data(year_choice):
         return gpd.read_file(file_path)
     return None
 
+@st.cache_data
+def load_pref_data():
+    base_dir = os.path.dirname(__file__)
+    file_path = os.path.join(base_dir, "data", "pref_boundaries.geojson")
+    if os.path.exists(file_path):
+        return gpd.read_file(file_path)
+    return None
+
 gdf_map = load_map_data(year_choice)
+gdf_pref = load_pref_data()
 
 if gdf_map is None:
     st.error("マップデータが見つかりません。必要なGeoJSONファイルが `data/` フォルダに配置されているか確認してください。")
@@ -132,13 +141,12 @@ if uploaded_file is not None:
                         missing_kwds={'color': 'lightgrey', 'label': 'データなし'}
                     )
                 
-                # 都道府県境界を太く描画する（都道府県単位で結合）
-                # 簡略化によって生じた微小な隙間（cleft/gap）を埋めるため、バッファを広げて結合した後に縮める Closing 処理を行います
-                gdf_temp = gdf_plot.copy()
-                gdf_temp['geometry'] = gdf_temp.geometry.buffer(0.005)
-                gdf_pref_bound = gdf_temp.dissolve(by='prefecture')
-                gdf_pref_bound['geometry'] = gdf_pref_bound.geometry.buffer(-0.005)
-                gdf_pref_bound.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5)
+                # 都道府県境界を太く描画する（事前保存された0.3MBの超軽量・高精度な都道府県境界データを使用）
+                if gdf_pref is not None:
+                    gdf_pref_plot = gdf_pref.copy()
+                    is_okinawa_pref = gdf_pref_plot['prefcode'] == '47'
+                    gdf_pref_plot.loc[is_okinawa_pref, 'geometry'] = gdf_pref_plot[is_okinawa_pref].geometry.translate(xoff=x_offset, yoff=y_offset)
+                    gdf_pref_plot.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5)
                 
                 # 表示範囲の限定と枠線
                 ax.set_xlim([128.3, 148.9])
