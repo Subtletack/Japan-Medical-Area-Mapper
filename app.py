@@ -158,9 +158,12 @@ if uploaded_file is not None:
                         gdf_pref_plot.loc[is_okinawa_pref, 'geometry'] = gdf_pref_plot[is_okinawa_pref].geometry.translate(xoff=x_offset, yoff=y_offset)
                         gdf_pref_plot.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.5)
                 else:
-                    # 個別都道府県表示の場合は、描画対象の二次医療圏（数個）をその場で即座に結合
-                    # これにより、ズームアップしても100%完全に一致する美しい境界線が描画されます（処理時間も数ミリ秒です）
-                    gdf_pref_bound = gdf_plot.dissolve()
+                    # 個別都道府県表示の場合は、描画対象の二次医療圏をその場で結合
+                    # 微小な隙間による内枠線（cleft/gap）の発生を防ぐため、バッファを広げて結合した後に縮める Closing 処理を行います
+                    gdf_temp = gdf_plot.copy()
+                    gdf_temp['geometry'] = gdf_temp.geometry.buffer(0.005)
+                    gdf_pref_bound = gdf_temp.dissolve()
+                    gdf_pref_bound['geometry'] = gdf_pref_bound.geometry.buffer(-0.005)
                     gdf_pref_bound.boundary.plot(ax=ax, edgecolor='#111111', linewidth=0.8)
                 
                 # 表示範囲の限定と自動ズーム
