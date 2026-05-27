@@ -84,8 +84,8 @@ if uploaded_file is not None:
         plot_type = st.sidebar.radio("変数の種類", ["連続変数 (グラデーション)", "カテゴリカル変数 (離散色)"])
         
         # 描画対象エリアの選択（全国地方公共団体コードの順：北海道から沖縄の順にソート）
-        pref_df = gdf_map[['prefecture', '都道府県']].drop_duplicates().sort_values('prefecture')
-        pref_list = ["全国"] + list(pref_df['都道府県'])
+        pref_df = gdf_map[['prefecture', 'N03_001']].drop_duplicates().sort_values('prefecture')
+        pref_list = ["全国"] + list(pref_df['N03_001'])
         selected_pref = st.sidebar.selectbox("表示エリア", pref_list)
         
         # カラーマップ選択
@@ -115,7 +115,7 @@ if uploaded_file is not None:
                 # 描画対象のフィルタリング
                 gdf_plot = gdf_merged.copy()
                 if selected_pref != "全国":
-                    gdf_plot = gdf_plot[gdf_plot['都道府県'] == selected_pref]
+                    gdf_plot = gdf_plot[gdf_plot['N03_001'] == selected_pref]
                 
                 # 移動距離設定（全国表示のみ沖縄を移動）
                 x_offset = 6.0
