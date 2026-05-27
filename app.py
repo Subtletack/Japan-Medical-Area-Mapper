@@ -115,8 +115,8 @@ if uploaded_file is not None:
                         cmap=cmap,
                         vmin=vmin,
                         vmax=vmax,
-                        edgecolor='black',
-                        linewidth=0.1,
+                        edgecolor='#444444',
+                        linewidth=0.2,
                         legend=True,
                         missing_kwds={'color': 'lightgrey', 'label': 'データなし'}
                     )
@@ -126,8 +126,8 @@ if uploaded_file is not None:
                         column=target_col,
                         cmap=cmap,
                         categorical=True,
-                        edgecolor='black',
-                        linewidth=0.1,
+                        edgecolor='#444444',
+                        linewidth=0.2,
                         legend=True,
                         missing_kwds={'color': 'lightgrey', 'label': 'データなし'}
                     )
@@ -144,7 +144,7 @@ if uploaded_file is not None:
                 ax.plot([128.3, 134.5, 134.5], [38.5, 38.5, 45.7], color='gray', linestyle='--', linewidth=1.0)
                 ax.set_axis_off()
                 
-                st.pyplot(fig)
+                st.pyplot(fig, dpi=300, use_container_width=True)
                 st.success("描画完了！画像を保存する場合は、右クリック（または長押し）から「名前を付けて画像を保存」を選択してください。")
 
     except Exception as e:
