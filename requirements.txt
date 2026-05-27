@@ -1,0 +1,7 @@
+streamlit
+pandas
+geopandas
+matplotlib
+japanize_matplotlib
+shapely
+openpyxl
